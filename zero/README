@@ -1,0 +1,7 @@
+press 'r' to start rotating
+press  up down left right arrow to move light
+precc 'c' to change color
+click left mouse key and move the mouse the rotate the object
+
+vertex array object seems of problem, still not find why.
+Meanwhile, on fedora 19 system, should add glew support to build the program with vao
