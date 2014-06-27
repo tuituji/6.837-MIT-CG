@@ -64,7 +64,7 @@ Curve evalBezier( const vector< Vector3f >& P, unsigned steps )
 	Vector3f T1 = -3 * P[0] + 3 * P[1];
 	T1.normalize();
 	if(Vector3f::dot(T1, Bi_1)-1 < 1e-4){
-		Bi_1.y() = 1;
+		Bi_1.y() = 1.0;
 		Bi_1.normalize();
 	}
 
