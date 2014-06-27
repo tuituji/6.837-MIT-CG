@@ -56,9 +56,42 @@ Curve evalBezier( const vector< Vector3f >& P, unsigned steps )
 
     cerr << "\t>>> Steps (type steps): " << steps << endl;
     cerr << "\t>>> Returning empty curve." << endl;
+	Curve curve;
+	Vector3f Bi_1;
+	unsigned short seed = 0;
+	Bi_1 = Vector3f(erand48(&seed), 0.0, 1.0);
+	Bi_1.normalize(); // it is likely that B0 will not parallel to T1
+	Vector3f T1 = -3 * P[0] + 3 * P[1];
+	T1.normalize();
+	if(Vector3f::dot(T1, Bi_1)-1 < 1e-4){
+		Bi_1.y() = 1;
+		Bi_1.normalize();
+	}
 
+	for(float t = 0; t < 1.0; t += 1.0/20) {
+		float _1_t = 1 - t;
+		CurvePoint point;
+		point.V = _1_t * _1_t * _1_t * P[0] 
+					+ 3 * t * _1_t * _1_t * P[1] 
+					+ 3 * t * t * _1_t * P[2]
+					+ t * t * t * P[3];
+	
+		point.T = -3 * _1_t * _1_t * P[0]
+					+ (3 * _1_t * _1_t - 6 * t * t) * P[1]
+					+ (6 * t - 9 * t * t) * P[2]
+					+ 3 * t * t * P[3];
+		point.T.normalize();
+		point.N = Vector3f::cross(Bi_1 , point.T);
+		point.N.normalize();
+		point.B = Vector3f::cross(point.T, point.N);
+		point.B.normalize();
+		Bi_1 = point.B;
+		curve.push_back(point);
+	}
+
+	return curve;
     // Right now this will just return this empty curve.
-    return Curve();
+//    return Curve();
 }
 
 Curve evalBspline( const vector< Vector3f >& P, unsigned steps )
