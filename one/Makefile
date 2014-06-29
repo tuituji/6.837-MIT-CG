@@ -4,7 +4,7 @@ INCFLAGS += -I ./vecmath/include
 LINKFLAGS = -lglut -lGL -lGLU
 #LINKFLAGS += -L /mit/6.837/public/lib -lvecmath
 
-CFLAGS    = -O2 -Wall -ansi -DSOLN
+CFLAGS    = -g3 -Wall -ansi -DSOLN
 CC        = g++
 SRCS      = main.cpp parse.cpp curve.cpp surf.cpp camera.cpp
 SRCS     += $(wildcard vecmath/src/*.cpp)

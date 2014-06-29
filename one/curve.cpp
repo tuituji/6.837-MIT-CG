@@ -63,12 +63,12 @@ Curve evalBezier( const vector< Vector3f >& P, unsigned steps )
 	Bi_1.normalize(); // it is likely that B0 will not parallel to T1
 	Vector3f T1 = -3 * P[0] + 3 * P[1];
 	T1.normalize();
-	if(Vector3f::dot(T1, Bi_1)-1 < 1e-4){
+	if( 1 - Vector3f::dot(T1, Bi_1) < 1e-4){
 		Bi_1.y() = 1.0;
 		Bi_1.normalize();
 	}
 
-	for(float t = 0; t < 1.0; t += 1.0/20) {
+	for(float t = 0; t < 1.0; t += 1.0/steps) {
 		float _1_t = 1 - t;
 		CurvePoint point;
 		point.V = _1_t * _1_t * _1_t * P[0] 
@@ -94,6 +94,33 @@ Curve evalBezier( const vector< Vector3f >& P, unsigned steps )
 //    return Curve();
 }
 
+/*
+void do_add_point(const Vector3f& P0, const Vector3f& P1, 
+				const Vector3f& P2, const Vector3f& P3, Curve& curve)
+{
+	for(float t = 0; t < 1.0; t += 1.0/steps) {
+		float _1_t = 1 - t;
+		CurvePoint point;
+		point.V = 1.0/6 *_1_t * _1_t * _1_t * P0
+                    + 1.0/6 * (3 * t * t * t - 6 * t * t + 4) * P1
+                    + 1.0/6 * (-3 * t * t * t + 3 * t * t + 3 * t + 1) * P2
+                    + 1.0/6 * t * t * t * P3;
+
+		point.T = -1/2.0 * _1_t * _1_t * P0
+                    + 1/2.0 * (3 * t * t - 4 * t) * P1
+                    + 1/2.0 * (-3 * t * t + 2 * t + 1) * P2
+                    + 1/2.0 * t * t * P3;
+		point.T.normalize();
+		point.N = Vector3f::cross(Bi_1 , point.T);
+		point.N.normalize();
+		point.B = Vector3f::cross(point.T, point.N);
+		point.B.normalize();
+		Bi_1 = point.B;
+		curve.push_back(point);
+	}
+}
+*/
+
 Curve evalBspline( const vector< Vector3f >& P, unsigned steps )
 {
     // Check
@@ -116,11 +143,51 @@ Curve evalBspline( const vector< Vector3f >& P, unsigned steps )
         cerr << "\t>>> " << P[i] << endl;
     }
 
-    cerr << "\t>>> Steps (type steps): " << steps << endl;
-    cerr << "\t>>> Returning empty curve." << endl;
+    Curve curve;
+    Vector3f Bi_1;
+    unsigned short seed = 0;
+    Bi_1 = Vector3f(erand48(&seed), 0.0, 1.0);
+    Bi_1.normalize(); // it is likely that B0 will not parallel to T1
+    Vector3f T1 = - 1.0/2 * P[0] + 1.0/2 * P[2];
+    T1.normalize();
+    if(1 - Vector3f::dot(T1, Bi_1) < 1e-4){
+        Bi_1.y() = 1.0;
+        Bi_1.normalize();
+    }
+	for(unsigned int i = 0; i < P.size() - 3; i += 1) {
+		Vector3f P0, P1, P2, P3;
+		if(i == P.size() -3) {
+			P0 = P[i]; P1 = P[i+1]; P2 = P[i+2]; P3 = P[i+2];
+		}
+		else {
+			P0 = P[i]; P1 = P[i+1]; P2 = P[i+2]; P3 = P[i+3];
+		}
+	    for(float t = 0; t < 1.0; t += 1.0/steps) {
+    	    float _1_t = 1 - t;
+	        CurvePoint point;
+	        point.V = 1.0/6 *_1_t * _1_t * _1_t * P0
+                    + 1.0/6 * (3 * t * t * t - 6 * t * t + 4) * P1
+                    + 1.0/6 * (-3 * t * t * t + 3 * t * t + 3 * t + 1) * P2
+                    + 1.0/6 * t * t * t * P3;
 
-    // Return an empty curve right now.
-    return Curve();
+	        point.T = -1/2.0 * _1_t * _1_t * P0
+                    + 1/2.0 * (3 * t * t - 4 * t) * P1
+                    + 1/2.0 * (-3 * t * t + 2 * t + 1) * P2
+                    + 1/2.0 * t * t * P3;
+	        point.T.normalize();
+	        point.N = Vector3f::cross(Bi_1 , point.T);
+	        point.N.normalize();
+	        point.B = Vector3f::cross(point.T, point.N);
+	        point.B.normalize();
+	        Bi_1 = point.B;
+	        curve.push_back(point);
+	    }
+	}
+	//curve.push_back(curve[0]);
+    cerr << "\t>>> Steps (type steps): " << steps << endl;
+    cerr << "\t>>> Returning bsp curve." << endl;
+
+	return curve;
 }
 
 Curve evalCircle( float radius, unsigned steps )
